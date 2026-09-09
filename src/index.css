@@ -1,0 +1,44 @@
+/* Fynanc design system — same tokens, fonts, and components as Financials Manager */
+@import '@jbaluch/components/styles';
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--body-regular-font-family, "DM Sans", sans-serif);
+  color: var(--text-text, #0d1728);
+  background: var(--surface-surface, #fbfbfd);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
