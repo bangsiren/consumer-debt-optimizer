@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { AttentionCircle, Button } from '@jbaluch/components'
 import { runOptimizer } from './api'
 import { RecommendationCard } from './components/RecommendationCard'
@@ -8,14 +8,15 @@ import { createRowId } from './format'
 import { SAMPLE_CREDIT_CARDS, SAMPLE_INPUTS, SAMPLE_LOANS } from './sampleData'
 import {
   ErrorBanner,
-  HeaderActions,
   HeaderCopy,
   HeaderRow,
+  InputStack,
   Page,
   PageInner,
+  ResultsStack,
+  RunBar,
   Subtitle,
   Title,
-  TopGrid,
 } from './styles'
 import type {
   AmortizedLoanInput,
@@ -81,21 +82,6 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const cardEvaluations = useMemo(
-    () =>
-      evaluations.filter(
-        (item) => item.debtId && cards.some((card) => card.debtId === item.debtId),
-      ),
-    [evaluations, cards],
-  )
-  const loanEvaluations = useMemo(
-    () =>
-      evaluations.filter(
-        (item) => item.debtId && loans.some((loan) => loan.debtId === item.debtId),
-      ),
-    [evaluations, loans],
-  )
-
   const patchInputs = (patch: Partial<OptimizerInputs>) => {
     setInputs((current) => ({ ...current, ...patch }))
     setServerDta(null)
@@ -142,12 +128,44 @@ function App() {
           <HeaderCopy>
             <Title>Capital Flow Optimizer</Title>
             <Subtitle>
-              Prioritize and sequence debt conversions to improve monthly flow while staying
-              inside DTA and divergence guardrails. Credit cards and loans stay in separate
-              tables. The first recommended move comes from the live optimizer.
+              Unlock trapped cash flow and put your capital to work more efficiently.
+            </Subtitle>
+            <Subtitle>
+              Add your credit cards and amortized loans, set your capacity and guardrails, then
+              run the optimizer to find the best sequence of moves to improve monthly cash flow.
             </Subtitle>
           </HeaderCopy>
-          <HeaderActions>
+        </HeaderRow>
+
+        {error && (
+          <ErrorBanner>
+            <AttentionCircle color="#ff7f50" width={16} height={16} />
+            <span>{error}</span>
+          </ErrorBanner>
+        )}
+
+        <InputStack>
+          <SystemSnapshot inputs={inputs} serverDta={serverDta} onChange={patchInputs} />
+
+          <DebtTable
+            kind="creditCard"
+            rows={cards}
+            evaluations={evaluations}
+            onChange={patchCard}
+            onAdd={() => setCards((current) => [...current, emptyCard(inputs.defaultLocInterestRate)])}
+            onRemove={(id) => setCards((current) => current.filter((row) => row.id !== id))}
+          />
+
+          <DebtTable
+            kind="amortizedLoan"
+            rows={loans}
+            evaluations={evaluations}
+            onChange={patchLoan}
+            onAdd={() => setLoans((current) => [...current, emptyLoan(inputs.defaultLocInterestRate)])}
+            onRemove={(id) => setLoans((current) => current.filter((row) => row.id !== id))}
+          />
+
+          <RunBar>
             <Button
               type="primary"
               icon="iconless"
@@ -165,42 +183,12 @@ function App() {
             >
               {loading ? 'Optimizing…' : 'Run optimizer'}
             </Button>
-          </HeaderActions>
-        </HeaderRow>
+          </RunBar>
+        </InputStack>
 
-        {error && (
-          <ErrorBanner>
-            <AttentionCircle color="#ff7f50" width={16} height={16} />
-            <span>{error}</span>
-          </ErrorBanner>
-        )}
-
-        <TopGrid>
-          <SystemSnapshot inputs={inputs} serverDta={serverDta} onChange={patchInputs} />
+        <ResultsStack>
           <RecommendationCard recommendation={recommendation} loading={loading} />
-        </TopGrid>
-
-        <DebtTable
-          kind="creditCard"
-          rows={cards}
-          inputs={inputs}
-          evaluations={cardEvaluations}
-          recommendedDebtId={recommendation?.debtId}
-          onChange={patchCard}
-          onAdd={() => setCards((current) => [...current, emptyCard(inputs.defaultLocInterestRate)])}
-          onRemove={(id) => setCards((current) => current.filter((row) => row.id !== id))}
-        />
-
-        <DebtTable
-          kind="amortizedLoan"
-          rows={loans}
-          inputs={inputs}
-          evaluations={loanEvaluations}
-          recommendedDebtId={recommendation?.debtId}
-          onChange={patchLoan}
-          onAdd={() => setLoans((current) => [...current, emptyLoan(inputs.defaultLocInterestRate)])}
-          onRemove={(id) => setLoans((current) => current.filter((row) => row.id !== id))}
-        />
+        </ResultsStack>
       </PageInner>
     </Page>
   )

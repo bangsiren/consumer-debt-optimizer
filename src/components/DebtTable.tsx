@@ -1,25 +1,23 @@
-import { Button, EditableCell, Table, TagCell, TextButton } from '@jbaluch/components'
+import { Button, EditableCell, Table, TextButton } from '@jbaluch/components'
 import { parseNumeric } from '../format'
-import type {
-  AmortizedLoanInput,
-  CreditCardInput,
-  DebtEvaluation,
-  OptimizerInputs,
-} from '../types'
-import { Card, CardTitle, Eyebrow, Subtitle, TableToolbar } from '../styles'
+import type { AmortizedLoanInput, CreditCardInput, DebtEvaluation } from '../types'
+import { AlignedTable, Card, CardTitle, Eyebrow, TableToolbar } from '../styles'
 
 const CURRENCY = {
   locale: 'en-US',
   currency: 'USD',
-  maxDecimals: 2,
+  maxDecimals: 0,
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
   allowNegative: false,
   thousandSeparator: true,
 }
 
 const PERCENT = {
-  precision: 2,
-  max: 100,
+  precision: 1,
+  max: 1,
   min: 0,
+  alreadyDecimal: true,
 }
 
 type DebtRow = (CreditCardInput | AmortizedLoanInput) & {
@@ -29,9 +27,7 @@ type DebtRow = (CreditCardInput | AmortizedLoanInput) & {
 interface DebtTableProps {
   kind: 'creditCard' | 'amortizedLoan'
   rows: Array<CreditCardInput | AmortizedLoanInput>
-  inputs: OptimizerInputs
-  evaluations: DebtEvaluation[]
-  recommendedDebtId?: string | null
+  evaluations?: DebtEvaluation[]
   onChange: (id: string, patch: Record<string, string | number | boolean>) => void
   onAdd: () => void
   onRemove: (id: string) => void
@@ -40,16 +36,15 @@ interface DebtTableProps {
 export function DebtTable({
   kind,
   rows,
-  evaluations,
-  recommendedDebtId,
+  evaluations = [],
   onChange,
   onAdd,
   onRemove,
 }: DebtTableProps) {
   const isCard = kind === 'creditCard'
-  const data: DebtRow[] = rows.map((row, index) => ({
+  const data: DebtRow[] = rows.map((row) => ({
     ...row,
-    evaluation: evaluations.find((item) => item.debtId === row.debtId) ?? evaluations[index],
+    evaluation: evaluations.find((item) => item.debtId === row.debtId),
   }))
 
   const columns = [
@@ -57,7 +52,7 @@ export function DebtTable({
       key: 'debtId',
       label: 'Account',
       flexGrow: 1,
-      minWidth: '160px',
+      minWidth: '140px',
       cellComponent: EditableCell,
       getCellProps: (row: DebtRow) => ({
         value: row.debtId,
@@ -83,7 +78,7 @@ export function DebtTable({
     },
     {
       key: 'currentPayment',
-      label: 'Payment / mo',
+      label: 'Monthly Payment',
       width: '150px',
       cellComponent: EditableCell,
       getCellProps: (row: DebtRow) => ({
@@ -99,25 +94,29 @@ export function DebtTable({
       ? [
           {
             key: 'minimumPaymentRatio',
-            label: 'Min pay %',
-            width: '130px',
+            label: 'Min Payment %',
+            width: '140px',
+            sortable: false,
             cellComponent: EditableCell,
             getCellProps: (row: DebtRow) => ({
               value: 'minimumPaymentRatio' in row ? row.minimumPaymentRatio : 0,
               type: 'percentage',
               percentage: PERCENT,
-              percentageFormat: 'decimal',
               field: 'minimumPaymentRatio',
               rowId: row.id,
-              onChange: (value: unknown) =>
-                onChange(row.id, { minimumPaymentRatio: parseNumeric(value) }),
+              onChange: (value: unknown) => {
+                const parsed = parseNumeric(value)
+                onChange(row.id, {
+                  minimumPaymentRatio: parsed >= 1 ? parsed / 100 : parsed,
+                })
+              },
             }),
           },
         ]
       : []),
     {
       key: 'proposedConversionAmount',
-      label: 'Convert',
+      label: 'Transfer Amount',
       width: '150px',
       cellComponent: EditableCell,
       getCellProps: (row: DebtRow) => ({
@@ -131,29 +130,20 @@ export function DebtTable({
       }),
     },
     {
-      key: 'status',
-      label: 'Status',
-      width: '110px',
+      key: 'priority',
+      label: 'Priority',
+      width: '100px',
+      sortable: false,
       alignment: 'center',
-      cellComponent: TagCell,
-      getCellProps: (row: DebtRow) => {
-        if (!row.evaluation) {
-          return { label: '—', alignment: 'center' }
-        }
-        const ok = row.evaluation.status.severity === 'Information'
-        const rank = row.evaluation.rank != null ? `#${row.evaluation.rank} ` : ''
-        return {
-          label: `${rank}${row.evaluation.status.text}`,
-          alignment: 'center',
-          backgroundColor: ok ? 'var(--surface-green-light, #e6f6f5)' : 'var(--surface-red-light, #fff1e8)',
-          textColor: ok ? 'var(--text-green, #0b6b67)' : 'var(--text-red, #a15c07)',
-        }
-      },
+      render: (_value: unknown, row: DebtRow) =>
+        row.evaluation?.rank != null ? `#${row.evaluation.rank}` : '—',
     },
     {
       key: 'actions',
-      label: '',
-      width: '88px',
+      label: 'Action',
+      width: '96px',
+      sortable: false,
+      alignment: 'center',
       render: (_value: unknown, row: DebtRow) => (
         <TextButton ariaLabel={`Remove ${row.debtId || 'debt'}`} onClick={() => onRemove(row.id)}>
           Remove
@@ -168,11 +158,6 @@ export function DebtTable({
         <div>
           <Eyebrow>{isCard ? 'Consumer revolving' : 'Installment'}</Eyebrow>
           <CardTitle>{isCard ? 'Credit cards' : 'Amortized loans'}</CardTitle>
-          <Subtitle>
-            {isCard
-              ? 'Minimum payment % applies here. Partial conversions are allowed.'
-              : 'Full or partial conversion of fixed payment loans.'}
-          </Subtitle>
         </div>
         <Button
           type="secondary"
@@ -191,14 +176,9 @@ export function DebtTable({
         </Button>
       </TableToolbar>
 
-      <Table
-        columns={columns}
-        data={data}
-        hoverableRows
-        isRowHighlighted={(row: DebtRow) =>
-          Boolean(recommendedDebtId && row.debtId === recommendedDebtId)
-        }
-      />
+      <AlignedTable $columns={columns.length}>
+        <Table columns={columns} data={data} hoverableRows disableSorting />
+      </AlignedTable>
     </Card>
   )
 }

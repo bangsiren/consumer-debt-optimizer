@@ -41,7 +41,7 @@ export function RecommendationCard({ recommendation, loading }: RecommendationCa
           <Subtitle>
             {loading
               ? 'The optimizer is ranking eligible debts.'
-              : 'Add debts below, then run the optimizer to see the first recommended conversion.'}
+              : 'Fill in the inputs above, then run the optimizer to see the first recommended conversion.'}
           </Subtitle>
         </EmptyRec>
       )}
@@ -58,7 +58,7 @@ export function RecommendationCard({ recommendation, loading }: RecommendationCa
               <RecValue>{debtTypeLabel(recommendation.debtType)}</RecValue>
             </RecItem>
             <RecItem>
-              <MetricLabel>Amount to convert</MetricLabel>
+              <MetricLabel>Transfer Amount</MetricLabel>
               <RecValue>{formatCurrency(recommendation.amountToConvert)}</RecValue>
             </RecItem>
             <RecItem>

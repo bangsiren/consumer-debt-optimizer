@@ -12,7 +12,6 @@ import {
   MetricStrip,
   MetricStripWarn,
   MetricValue,
-  Subtitle,
 } from '../styles'
 
 const CURRENCY = {
@@ -46,15 +45,12 @@ export function SystemSnapshot({ inputs, serverDta, onChange }: SystemSnapshotPr
       <div>
         <Eyebrow>System snapshot</Eyebrow>
         <CardTitle>Capacity and guardrails</CardTitle>
-        <Subtitle>
-          Yellow cells from the spreadsheet — these are the inputs the optimizer uses.
-        </Subtitle>
       </div>
 
       <FieldGrid>
         <Field>
           <Input
-            label="Capital Amplifier Assets"
+            label="Engine Assets"
             type="currency"
             currency={CURRENCY}
             value={String(inputs.assetValue)}
@@ -63,7 +59,7 @@ export function SystemSnapshot({ inputs, serverDta, onChange }: SystemSnapshotPr
         </Field>
         <Field>
           <Input
-            label="Current System Debt"
+            label="Engine Debt"
             type="currency"
             currency={CURRENCY}
             value={String(inputs.debtBalance)}
@@ -91,7 +87,7 @@ export function SystemSnapshot({ inputs, serverDta, onChange }: SystemSnapshotPr
         </Field>
         <Field>
           <Input
-            label="Default LOC Annual Rate"
+            label="LOC/Margin Interest Rate"
             type="percentage"
             percentage={PERCENT}
             percentageFormat="decimal"
@@ -101,7 +97,7 @@ export function SystemSnapshot({ inputs, serverDta, onChange }: SystemSnapshotPr
         </Field>
         <Field>
           <Input
-            label="Minimum Divergence Ratio"
+            label="Minimum DSCR"
             type="numeric"
             numeric={{ min: 0, precision: 2, allowNegative: false }}
             value={String(inputs.minimumDivergenceRatio)}
