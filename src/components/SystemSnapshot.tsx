@@ -8,6 +8,7 @@ import {
   Eyebrow,
   Field,
   FieldGrid,
+  MetricField,
   MetricLabel,
   MetricStrip,
   MetricStripWarn,
@@ -115,12 +116,13 @@ export function SystemSnapshot({ inputs, serverDta, onChange }: SystemSnapshotPr
             }
           />
         </Field>
+        <MetricField>
+          <Strip>
+            <MetricLabel>Current DTA</MetricLabel>
+            <MetricValue>{formatPercent(shownDta)}</MetricValue>
+          </Strip>
+        </MetricField>
       </FieldGrid>
-
-      <Strip>
-        <MetricLabel>Current DTA</MetricLabel>
-        <MetricValue>{formatPercent(shownDta)}</MetricValue>
-      </Strip>
     </Card>
   )
 }

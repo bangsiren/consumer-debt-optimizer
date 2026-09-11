@@ -1,7 +1,7 @@
 import { Button, EditableCell, Table, TextButton } from '@jbaluch/components'
 import { parseNumeric } from '../format'
 import type { AmortizedLoanInput, CreditCardInput, DebtEvaluation } from '../types'
-import { AlignedTable, Card, CardTitle, Eyebrow, TableToolbar } from '../styles'
+import { AlignedTable, Card, CardTitle, Eyebrow, TableActions, TableToolbar } from '../styles'
 
 const CURRENCY = {
   locale: 'en-US',
@@ -155,10 +155,16 @@ export function DebtTable({
   return (
     <Card>
       <TableToolbar>
-        <div>
-          <Eyebrow>{isCard ? 'Consumer revolving' : 'Installment'}</Eyebrow>
-          <CardTitle>{isCard ? 'Credit cards' : 'Amortized loans'}</CardTitle>
-        </div>
+        <Eyebrow>{isCard ? 'Consumer revolving' : 'Installment'}</Eyebrow>
+        <CardTitle>{isCard ? 'Credit cards' : 'Amortized loans'}</CardTitle>
+      </TableToolbar>
+
+      <AlignedTable $columns={columns.length}>
+        <Table columns={columns} data={data} hoverableRows disableSorting />
+      </AlignedTable>
+
+      <TableActions>
+        <div />
         <Button
           type="secondary"
           icon="iconless"
@@ -174,11 +180,7 @@ export function DebtTable({
         >
           {isCard ? 'Add card' : 'Add loan'}
         </Button>
-      </TableToolbar>
-
-      <AlignedTable $columns={columns.length}>
-        <Table columns={columns} data={data} hoverableRows disableSorting />
-      </AlignedTable>
+      </TableActions>
     </Card>
   )
 }

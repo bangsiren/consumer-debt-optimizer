@@ -112,7 +112,7 @@ export const CardTitle = styled.h2`
 
 export const FieldGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
 
   @media (max-width: 640px) {
@@ -127,10 +127,18 @@ export const Field = styled.div`
   min-width: 0;
 `
 
+export const MetricField = styled(Field)`
+  justify-content: flex-end;
+`
+
 export const MetricStrip = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   gap: 16px;
   padding: 12px 16px;
   border-radius: 12px;
@@ -221,10 +229,15 @@ export const ErrorBanner = styled.div`
 `
 
 export const TableToolbar = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`
+
+export const TableActions = styled.div`
   display: grid;
   grid-template-columns: 1fr 104px;
-  align-items: start;
-  gap: 16px;
+  align-items: center;
 
   > :last-child {
     width: 104px;
